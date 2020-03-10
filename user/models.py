@@ -10,7 +10,7 @@ class User(models.Model):
     password      = models.CharField(validators = [MinLengthValidator(8)], max_length = 100, unique = True)
     age           = models.CharField(max_length = 100, null = True)
     name          = models.CharField(max_length = 50, null = True)
-    sex           = models.CharField(max_length = 5, null = True)
+    gender        = models.CharField(max_length = 5, null = True)
     profile_image = models.CharField(max_length = 100, null = True)
     grade         = models.ForeignKey('Grade', on_delete = models.CASCADE, null = True, default = 1)
     uuid          = models.CharField(max_length = 200, null = True, unique = True)
@@ -60,6 +60,5 @@ class Follow(models.Model):
     class Meta:
         unique_together = ('follower', 'followee')
         db_table = 'follows'
-
 
 
