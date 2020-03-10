@@ -1,15 +1,16 @@
 import jwt, bcrypt, json, uuid
 
-from django.db        import IntegrityError
-from django.db.models import Count, Q
-from django.views     import View
-from django.http      import HttpResponse, JsonResponse
-from django.db    import IntegrityError
+from django.db              import IntegrityError
+from django.db.models       import Count, Q
+from django.views           import View
+from django.http            import HttpResponse, JsonResponse
+from django.db              import IntegrityError
+from django.core.exceptions import ValidationError
 
 from .models                    import User, Message, Follow
 from music.models               import Song, Playlist
 
-class UserView(View):
+class SignUpView(View):
     def post(self, request):
         data = json.loads(request.body)
         try:
@@ -18,7 +19,7 @@ class UserView(View):
                     password      = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt()).decode('utf-8'),
                     age           = data['age'],
                     name          = data['name'],
-                    sex           = data['sex'],
+                    gender        = data['gender'],
                     profile_image = data['profile_image'],
                     uuid          = str(uuid.uuid3(uuid.NAMESPACE_DNS, data['email']).hex)
             )
