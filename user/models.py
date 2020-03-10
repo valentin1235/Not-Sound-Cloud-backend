@@ -1,12 +1,14 @@
 import uuid
+import datetime
 
+from django.utils import timezone
 from django.db import models
 from django.core.validators import MinLengthValidator
 
 from music.models import Song, Playlist
 
 class User(models.Model):
-    email         = models.CharField(max_length = 100, null = True, unique = True)
+    email         = models.EmailField(max_length = 250, null = True, unique = True)
     password      = models.CharField(validators = [MinLengthValidator(8)], max_length = 100, unique = True)
     age           = models.CharField(max_length = 100, null = True)
     name          = models.CharField(max_length = 50, null = True)
@@ -29,15 +31,16 @@ class Grade(models.Model):
         db_table = 'grades'
 
 class Message(models.Model):
-    content   = models.TextField(null = True)
-    from_user = models.ForeignKey('User', on_delete = models.SET_NULL, null = True, related_name = 'from_user')
-    to_user   = models.ForeignKey('User', on_delete = models.SET_NULL, null = True, related_name = 'to_user')
-    playlist  = models.ManyToManyField(Playlist, through = 'MessagePlaylist')
-    song      = models.ManyToManyField(Song, through = 'MessageSong')
+    content    = models.TextField(null = True)
+    from_user  = models.ForeignKey('User', on_delete = models.SET_NULL, null = True, related_name = 'from_user')
+    to_user    = models.ForeignKey('User', on_delete = models.SET_NULL, null = True, related_name = 'to_user')
+    created_at = models.DateTimeField(auto_now_add = True)
+    updated_at = models.DateTimeField(auto_now = True)
+    playlist   = models.ManyToManyField(Playlist, through = 'MessagePlaylist')
+    song       = models.ManyToManyField(Song, through = 'MessageSong')
 
     class Meta:
-        unique_together = ('from_user', 'to_user')
-        db_table = 'messages'
+        db_table        = 'messages'
 
 class MessagePlaylist(models.Model):
     message  = models.ForeignKey('Message', on_delete = models.CASCADE, null = True)
