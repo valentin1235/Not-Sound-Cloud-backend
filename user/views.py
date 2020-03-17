@@ -94,9 +94,10 @@ class SignInView(View):
                         SECRET_KEY, 
                         algorithm = ALGORITHM
                     )
-                    uuid = User.objects.get(email = data['email']).uuid
-                    
-                    return JsonResponse({'user' : {'token' : token.decode('utf-8'), 'uuid' : uuid}}, status = 200)
+                    uuid = user.uuid
+                    return_key = {'user' : {'token' : token.decode('utf-8'), 'uuid' : uuid}}
+
+                    return JsonResponse(return_key, status = 200)
 
                 return JsonResponse({'message' : 'CHECK_PASSWORD'}, status = 401)
 
@@ -104,6 +105,15 @@ class SignInView(View):
 
         except KeyError: 
             return JsonResponse({'message' : 'INVALID_KEY'}, status = 400)
+
+class UserSearchView(View):
+    @login_required
+    def post(self, request):
+        data = json.loads(request.body)
+        users = User.objects.filter(name = data['name'])
+        user_info = [{'user_id' : user.id, 'user_name' : user.name} for user in users]
+        
+        return JsonResponse({'user_info' : user_info}, status = 200)
 
 class MessageView(View):
     @login_required
@@ -134,44 +144,53 @@ class MessageView(View):
     @login_required
     def get(self, request):
         try:
-            filters = {'from_user_id' : request.user.id}
+            user    = request.user.id
             to_user = request.GET.get('to_user', None)
-
+            
             if to_user:
-                filters['to_user_id'] = to_user
-                messages = Message.objects.prefetch_related('playlist').filter(**filters)
+                messages = (
+                        Message.objects.prefetch_related('playlist', 'song')
+                        .filter((Q(from_user_id=user)&Q(to_user_id=to_user))|(Q(from_user_id=to_user)&Q(to_user_id=user)))
+                        .order_by('created_at')
+                )
                 messages = [
                         {
-                    'id'           : message.id, 
-                    'content'      : message.content, 
-                    'from_user_id' : message.from_user_id, 
-                    'to_user_id'   : message.to_user.id, 
-                    'created_at'   : message.created_at, 
-                    'playlist'     : [{'playlist_id' : data.id, 'name' : data.name} for data in message.playlist.all()],
-                    'song'         : [{'song_id' : data.id, 'name' : data.name} for data in message.song.all()],
+                    'id'             : message.id, 
+                    'content'        : message.content, 
+                    'from_user_id'   : message.from_user_id, 
+                    'from_user_name' : message.from_user.name,
+                    'from_user_img'  : message.from_user.profile_image,
+                    'to_user_id'     : message.to_user_id,
+                    'to_user_name'   : message.to_user.name,
+                    'to_user_img'    : message.to_user.profile_image,
+                    'is_checked'     : message.is_checked,
+                    'created_at'     : message.created_at, 
+                    'playlist'       : [{'playlist_id' : data.id, 'name' : data.name} for data in message.playlist.all()],
+                    'song'           : [{'song_id' : data.id, 'name' : data.name} for data in message.song.all()],
                     }
                     for message in messages
                 ]
-            
+                Message.objects.filter(to_user_id = user).update(is_checked = True)
+
                 return JsonResponse({'data' : messages}, status = 200)
             
-            messages = Message.objects.prefetch_related('playlist').filter(**filters)
+            messages = Message.objects.filter(Q(from_user_id = user)|Q(to_user_id = user))
             datas = [{
                     'from_user_id'      : message.from_user_id, 
                     'from_user_name'    : message.from_user.name, 
+                    'from_user_img'     : message.from_user.profile_image,
                     'to_user_id'        : message.to_user_id, 
                     'to_user_name'      : message.to_user.name,
-                    'last_message'      : messages.last().content,
-                    'last_message_time' : messages.last().created_at,} 
+                    'to_user_img'       : message.to_user.profile_image,
+                    'last_message'      : message.content,
+                    'is_checked'        : message.is_checked,
+                    'last_message_time' : message.created_at,} 
                     for message in messages]
             message_all = list({data['to_user_id'] : data for data in datas}.values())
 
-            return JsonResponse({'data' : message_all}, status = 200)
+            return JsonResponse({'data' : list(message_all)}, status = 200)
 
         except ValueError:
-            return JsonResponse({'message' : 'UNAUTHORIZED_USER'}, status = 403)
-
-        except AttributeError:
             return JsonResponse({'message' : 'UNAUTHORIZED_USER'}, status = 403)
 
 class FollowView(View):
@@ -210,20 +229,133 @@ class FollowView(View):
             'follower_count' : data.to_follow.follow.values().count()} 
             for data in user_following]       
 
-        return JsonResponse({'message' : to_follow})
+        return JsonResponse({'following' : to_follow}, status = 200)
 
 class UserRecommendationView(View):
     @login_required
     def get(self, request):
+        user=request.user
         limit = request.GET.get('limit', 3)
+        random_users = User.objects.prefetch_related('follow').order_by('?')
         recommended_user = [
-            {'name'           : user.name,
-            'id'              : user.id, 
-            'song_count'      : user.song_set.count(), 
-            'to_follow_count' : user.follow.values().count()} 
-            for user in User.objects.prefetch_related('follow').order_by('?')[:limit]
+            {'name'           : random_user.name,
+            'id'              : random_user.id, 
+            'song_count'      : random_user.song_set.count(), 
+            'to_follow_count' : random_user.follow.values().count(),
+            'profile_image'   : random_user.profile_image,
+            'mutual_follow'   : True if Follow.objects.filter(from_follow_id = user.id, to_follow_id = random_user.id) else False} 
+            for random_user in random_users[:limit]
         ]
 
         return JsonResponse({'data' : recommended_user}, status = 200)
 
+class GoogleSignInView(View):
+    def post(self, request):
+        id_token     = request.headers.get('id_token', None)
+        user_request = requests.get(f'https://oauth2.googleapis.com/tokeninfo?id_token={id_token}')
+        user_info    = user_request.json()
+        google_email = user_info.get('email')
+        google_name  = user_info.get('name')
 
+        if User.objects.filter(email = google_email).exists():
+            user       = User.objects.get(email = google_email)
+            token      = jwt.encode({'user_id' : user.id}, SECRET_KEY, algorithm = ALGORITHM)
+            return_key = {'user' : {'token' : token.decode('utf-8'), 'uuid' : user.uuid}}
+            return JsonResponse(return_key, status = 200)
+
+        user = User.objects.create(
+            email = google_email,
+            name  = google_name,
+            uuid  = str(uuid.uuid3(uuid.NAMESPACE_DNS, google_email).hex)
+        )
+        token = jwt.encode({'user_id' : user.id}, SECRET_KEY, algorithm = ALGORITHM)
+        user_uuid  = user.uuid
+        return_key = {'user' : {'token' : token.decode('utf-8'), 'uuid' : user_uuid}}
+        return JsonResponse(return_key, status = 200)
+
+class NotificationView(View):
+    @login_required
+    def get(self, request):
+        user = request.user.id
+        message_checked = (
+                Message.objects
+                .filter(to_user_id = user)
+                .order_by('created_at')
+                .last().is_checked
+        )
+        from_user_id    = (
+                Message.objects
+                .filter(to_user_id = user)
+                .order_by('created_at')
+                .last().from_user_id
+        )
+        follow_checked  = (
+                Follow.objects
+                .filter(to_follow = user)
+                .order_by('created_at')
+                .last().is_checked
+        )
+        from_follow_id  = (
+                Follow.objects
+                .filter(to_follow = user)
+                .order_by('created_at')
+                .last().from_follow_id
+        )
+        
+        if not message_checked  or not follow_checked:
+            return_key = {
+                    'data' : {
+                        'message_checked' : message_checked, 
+                        'follow_checked'  : follow_checked,
+                        'follower_id'     : from_follow_id,
+                        'sender'          : from_user_id,
+                    }
+            }
+            return JsonResponse(return_key, status = 200)
+        
+        return_key = {
+                'data' : {
+                    'message_checked' : message_checked, 
+                    'follow_checked'  : follow_checked,
+                }
+        }
+        return JsonResponse(return_key, status = 200)
+
+class StatusView(View):
+    @login_required
+    def get(self, request):
+        user = request.user.id
+        follow_status  = (
+                Follow.objects
+                .filter(to_follow_id = user, is_checked = False)
+                .select_related('from_follow', 'to_follow')
+                .order_by('created_at')
+        )
+        if not len(list(follow_status)):
+            return JsonResponse({'message' : 'EMPTY_UPDATES'}, status = 400)
+        
+        return_key = {
+            'data' : 
+                [{'follower_name'             : status.from_follow.name,
+                    'follower_id'             : status.from_follow.id,
+                    'follower_follower_count' : status.from_follow.follow_reverse.all().count(), 
+                    'follower_song_count'     : status.from_follow.song_set.all().count(),
+                    'follower_image'          : status.from_follow.profile_image,
+                    'follow_at'               : status.created_at,
+                    'is_checked'              : status.is_checked,
+                    'mutual_follow'           : True if Follow.objects.filter(from_follow_id = user, to_follow_id = status.from_follow_id) else False} 
+                    for status in follow_status]
+        }
+        Follow.objects.filter(to_follow_id = user).update(is_checked = True)
+
+        return JsonResponse(return_key, status=200)
+
+class UserInfoView(View):
+    @login_required
+    def get(self, request):
+        user = request.user
+        return JsonResponse({
+            'data' : {'user_id'  : user.id, 
+                    'user_name'  : user.name, 
+                    'user_image' : user.profile_image}
+            })

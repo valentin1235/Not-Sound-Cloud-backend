@@ -9,7 +9,7 @@ class User(models.Model):
     password      = models.CharField(max_length = 100)
     age           = models.CharField(max_length = 100, null = True)
     name          = models.CharField(max_length = 50, null = True)
-    gender        = models.CharField(max_length = 5, null = True)
+    gender        = models.CharField(max_length = 20, null = True)
     profile_image = models.CharField(max_length = 100, null = True)
     grade         = models.ForeignKey('Grade', on_delete = models.CASCADE, null = True, default = 1)
     uuid          = models.CharField(max_length = 200, null = True, unique = True)
@@ -35,6 +35,7 @@ class Message(models.Model):
     updated_at = models.DateTimeField(auto_now = True)
     playlist   = models.ManyToManyField('song.Playlist', through = 'MessagePlaylist')
     song       = models.ManyToManyField('song.Song', through = 'MessageSong')
+    is_checked = models.BooleanField(default = False)
 
     class Meta:
         db_table = 'messages'
@@ -56,6 +57,8 @@ class MessageSong(models.Model):
 class Follow(models.Model):
     from_follow = models.ForeignKey('User', on_delete = models.CASCADE, null = True, related_name = 'from_follow')
     to_follow   = models.ForeignKey('User', on_delete = models.CASCADE, null = True, related_name = 'to_follow')
+    created_at  = models.DateTimeField(auto_now_add = True, null = True)
+    is_checked  = models.BooleanField(default = False)
     
     class Meta:
         unique_together = ('from_follow', 'to_follow')
