@@ -17,7 +17,7 @@ def login_required(func):
             decode = jwt.decode(access_token, SECRET_KEY, algorithm = ALGORITHM)
             user = User.objects.get(id=decode['user_id'])    
             request.user = user
-                
+
         except InvalidSignatureError:
             JsonResponse({'message' : 'UNAUTHORIZED'}, status = 401)
             

@@ -1,10 +1,12 @@
-import jwt, bcrypt, json, uuid, pytest
+import jwt, bcrypt, json, uuid, pytest, time
 
+from datetime                  import datetime
 from .utils                    import login_required
 from .models                   import User, Message, Follow, MessagePlaylist, MessageSong
 from .views                    import SignInView, WebSignUpView, MessageView, FollowView 
 from song.models               import Song, Playlist
 from notsoundcloud.my_settings import SECRET_KEY, ALGORITHM
+from unittest.mock             import patch, MagicMock
 
 from django.test import TestCase, Client
 
@@ -232,14 +234,204 @@ class UserRecommendationTest(TestCase):
         User.objects.create(email='bbb@bbb.com', password='bbbbbbbb', name='bbb', age='24', gender='male')
         self.token = jwt.encode({'user_id' : User.objects.get(email = 'aaa@aaa.com').id}, SECRET_KEY, algorithm = ALGORITHM)
 
+    def tearDwon(self):
+        User.objects.all().delete()
+
     def test_get_success(self):
         client = Client()
         header = {"HTTP_Authorization" : self.token}
         response = client.get('/user/recommendation', **header)
         self.assertEqual(response.status_code, 200)
 
+class GoogleSignInTest(TestCase):
+    def setUp(self):
+        User.objects.create(
+                email = 'aaa@aaa.com',
+                name  = 'aaaa',
+        )
+
+    def tearDown(self):
+        User.objects.all().delete()
+    
+    @patch('user.views.requests')
+    def test_google_sign_up_success(self, mocked_request):
+        client = Client()
+        
+        class MockedResponse:
+            def json(self):
+                return {
+                        'email' : 'bbb@bbb.com',
+                        'name'  : 'bbbb',
+                }
+
+        mocked_request.get = MagicMock(return_value = MockedResponse())
+        header = {'HTTP_Authorization' : 'google_auth_token'}
+        response = client.post('/user/sign-up/google', content_type = 'applications/json', **header)
+        self.assertEqual(response.status_code, 200)
+    
+    @patch('user.views.requests')
+    def test_google_sign_in_success(self, mocked_request):
+        client = Client()
+        
+        class MockResponse:
+            def json(self):
+                return {
+                        'email' : 'aaa@aaa.com',
+                        'name'  : 'aaaa',
+                }
+
+        mocked_request.get = MagicMock(return_value = MockResponse())
+        header = {'HTTP_Authorization' : 'google_auth_token'}
+        response = client.post('/user/sign-up/google', content_type = 'applications/json', **header)
+        self.assertEqual(response.status_code, 200)
+        
+class NotificationTest(TestCase):
+    def setUp(self):
+        self.user1 = User.objects.create(
+                email         = 'aaa@aaa.com', 
+                password      = 'aaaaaaaa', 
+                name          = 'aaa', 
+                gender        = 'male', 
+                profile_image = 'aaa'
+        )
+        self.user2 = User.objects.create(
+                email         = 'bbb@bbb.com', 
+                password      = 'bbbbbbbb', 
+                name          = 'bbb', 
+                gender        = 'male', 
+                profile_image = 'bbb'
+        )  
+        self.user3 = User.objects.create(
+                email         = 'ccc@ccc.com', 
+                password      = 'cccccccc', 
+                name          = 'ccc', 
+                gender        = 'male', 
+                profile_image = 'ccc'
+        )
+        self.follow = Follow.objects.create(
+                from_follow_id = self.user2.id, 
+                to_follow_id   = self.user1.id
+        )
+        self.message = Message.objects.create(
+                from_user_id = self.user2.id,
+                to_user_id   = self.user1.id,
+                content      = 'ok'
+        )
+        self.token = jwt.encode({'user_id' : User.objects.get(email = 'aaa@aaa.com').id}, SECRET_KEY, algorithm = ALGORITHM)
+
+    def tearDown(self):
+        User.objects.all().delete()
+        Message.objects.all().delete()
+        Follow.objects.all().delete()
+                
+    def test_notification_follower_updated(self):
+        client   = Client()
+
+        header   = {'HTTP_Authorization' : self.token}
+        Follow.objects.create(from_follow_id = self.user3.id, to_follow_id = self.user1.id)
+        Message.objects.create(from_user_id = self.user3.id, to_user_id = self.user1.id, content = 'hi')
+        mock_result = {
+                'data' : {
+                    'message_checked' : False,
+                    'follow_checked'  : False,
+                    'follower_id'     : self.user3.id,
+                    'sender'          : self.user3.id,
+                }
+        }
+
+        response = client.get('/user/notification', content_type = 'applications/json', **header)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), mock_result)
+
+class StatusTest(TestCase):
+    def setUp(self):
+        self.user1 = User.objects.create(
+                email         = 'aaa@aaa.com', 
+                password      = 'aaaaaaaa', 
+                name          = 'aaa', 
+                gender        = 'male', 
+                profile_image = 'aaa'
+        )
+        self.user2 = User.objects.create(
+                email         = 'bbb@bbb.com', 
+                password      = 'bbbbbbbb', 
+                name          = 'bbb', 
+                gender        = 'male', 
+                profile_image = 'bbb'
+        )  
+        self.user3 = User.objects.create(
+                email         = 'ccc@ccc.com', 
+                password      = 'cccccccc', 
+                name          = 'ccc', 
+                gender        = 'male', 
+                profile_image = 'ccc'
+        )
+        self.follow = Follow.objects.create(
+                from_follow_id = self.user2.id, 
+                to_follow_id   = self.user1.id
+        )
+        self.message = Message.objects.create(
+                from_user_id = self.user2.id,
+                to_user_id   = self.user1.id,
+                content      = 'ok'
+        )
+        self.token = jwt.encode({'user_id' : User.objects.get(email = 'aaa@aaa.com').id}, SECRET_KEY, algorithm = ALGORITHM)
+
+    def test_status_follower_updates_mutual_follow(self):
+        client = Client()
+        Follow.objects.create(
+                from_follow_id = self.user1.id, 
+                to_follow_id   = self.user2.id
+        )
+        header   = {'HTTP_Authorization' : self.token}
+        response = client.get('/user/status', content_type = 'applications/json', **header)
+        self.assertEqual(response.status_code, 200)
+
+    def test_status_empty_status(self):
+        client = Client()
+        Follow.objects.filter(to_follow_id = self.user1.id).update(is_checked = True)
+        header   = {'HTTP_Authorization' : self.token}
+        response = client.get('/user/status', content_type = 'applications/json', **header)
+        self.assertEqual(response.status_code, 400)
+
+class UserInfoTest(TestCase):
+    def setUp(self):
+        self.user1 = User.objects.create(
+                email         = 'aaa@aaa.com',
+                password      = 'aaaaaaaa',
+                name          = 'aaa',
+                gender        = 'male',
+                profile_image = 'aaa'
+        )
+        self.token = jwt.encode({'user_id' : User.objects.get(email = 'aaa@aaa.com').id}, SECRET_KEY, algorithm = ALGORITHM)
+
+    def test_get_success(self):
+        client = Client()
+        header   = {'HTTP_Authorization' : self.token}
+        response = client.get('/user', content_type = 'applications/json', **header)
+        self.assertEqual(response.status_code, 200)
+
+class UserSearchTest(TestCase):
+    def setUp(self):
+        self.user1 = User.objects.create(
+                email         = 'aaa@aaa.com',
+                password      = 'aaaaaaaa',
+                name          = 'aaa',
+                gender        = 'male',
+                profile_image = 'aaa'
+        )
+        self.token = jwt.encode({'user_id' : User.objects.get(email = 'aaa@aaa.com').id}, SECRET_KEY, algorithm = ALGORITHM)
+
+    def test_search_post_success(self):
+        client = Client()
+        search_value = {
+                'name' : self.user1.name,
+        }
+        header   = {'HTTP_Authorization' : self.token}
+        response = client.post('/user/search', json.dumps(search_value), **header, content_type = 'application/json')
+        header   = {'HTTP_Authorization' : self.token}
+        self.assertEqual(response.status_code, 200)
 
 
-
-
+       
 
