@@ -1,15 +1,17 @@
 from django.db import models
 
 class Song(models.Model):
-    name        = models.CharField(max_length = 45)
-    description = models.TextField()
-    small_image = models.URLField(null = True)
-    big_image   = models.URLField(null = True)
-    song_url    = models.URLField(null = True)
-    album       = models.ForeignKey('Album', on_delete = models.SET_NULL, null = True)
-    option      = models.ForeignKey('Option', on_delete = models.SET_NULL, null = True)
-    user        = models.ForeignKey('user.User', on_delete = models.SET_NULL, null = True)
-    created_at  = models.DateTimeField(auto_now_add=True, null=True)
+    name               = models.CharField(max_length = 45)
+    description        = models.TextField(null=True)
+    small_image        = models.URLField(null = True)
+    big_image          = models.URLField(null = True)
+    song_url           = models.URLField(null = True)
+    song_sample_rate   = models.IntegerField(default = 8000, null = True)
+    song_contents_type = models.CharField(max_length = 45, null = True)
+    album              = models.ForeignKey('Album', on_delete = models.SET_NULL, null = True)
+    option             = models.ForeignKey('Option', on_delete = models.SET_NULL, null = True)
+    user               = models.ForeignKey('user.User', on_delete = models.SET_NULL, null = True)
+    created_at         = models.DateTimeField(auto_now_add=True, null=True)
     class Meta:
         db_table = 'songs'
 
@@ -46,10 +48,12 @@ class PlaylistSong(models.Model):
         db_table = 'playlist_songs'
 
 class Tag(models.Model):
-    name     = models.CharField(max_length=45)
+    name     = models.CharField(max_length = 45)
     album    = models.ManyToManyField('Album',through='TagAlbum')
     playlist = models.ManyToManyField(Playlist,through='TagPlaylist')
     song     = models.ManyToManyField(Song,through='TagSong')
+    is_popular  = models.BooleanField(default=False)
+
     class Meta:
         db_table='tags'
 

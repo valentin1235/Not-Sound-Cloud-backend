@@ -11,9 +11,9 @@ from django.core.validators import validate_email
 from django.core.validators import ValidationError
 
 from .utils                    import login_required
-from .models                   import User, Message, Follow, MessagePlaylist, MessageSong, GoogleAccount
+from .models                   import User, Message, Follow, MessagePlaylist, MessageSong
 from song.models               import Song, Playlist 
-from notsoundcloud.my_settings import SECRET_KEY, ALGORITHM          
+from my_settings import SECRET_KEY, ALGORITHM          
 
 class WebSignUpView(View):
     def post(self, request):

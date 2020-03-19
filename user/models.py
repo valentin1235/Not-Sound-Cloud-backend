@@ -63,10 +63,3 @@ class Follow(models.Model):
     class Meta:
         unique_together = ('from_follow', 'to_follow')
         db_table        = 'follows'
-
-class GoogleAccount(models.Model):
-    email = models.EmailField(max_length = 250, null = True, unique = True)
-    name  = models.CharField(max_length = 50, null = True)
-
-    class Meta:
-        db_table = 'google_accounts'
