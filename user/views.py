@@ -148,14 +148,14 @@ class MessageView(View):
             to_user = request.GET.get('to_user', None)
             
             if to_user:
-                messages = (
+                message_details = (
                         Message.objects.prefetch_related('playlist', 'song')
                         .filter((Q(from_user_id=user)&Q(to_user_id=to_user))|(Q(from_user_id=to_user)&Q(to_user_id=user)))
                         .order_by('created_at')
                 )
                 messages = [
                         {
-                    'id'             : message.id, 
+                    'message_id'     : message.id, 
                     'content'        : message.content, 
                     'from_user_id'   : message.from_user_id, 
                     'from_user_name' : message.from_user.name,
@@ -168,13 +168,13 @@ class MessageView(View):
                     'playlist'       : [{'playlist_id' : data.id, 'name' : data.name} for data in message.playlist.all()],
                     'song'           : [{'song_id' : data.id, 'name' : data.name} for data in message.song.all()],
                     }
-                    for message in messages
+                    for message in message_details
                 ]
                 Message.objects.filter(to_user_id = user).update(is_checked = True)
 
-                return JsonResponse({'data' : messages}, status = 200)
+                return JsonResponse({'message_details' : messages}, status = 200)
             
-            messages = Message.objects.filter(Q(from_user_id = user)|Q(to_user_id = user))
+            message_chunk = Message.objects.filter(Q(from_user_id = user)|Q(to_user_id = user)).order_by('created_at')
             datas = [{
                     'from_user_id'      : message.from_user_id, 
                     'from_user_name'    : message.from_user.name, 
@@ -183,15 +183,54 @@ class MessageView(View):
                     'to_user_name'      : message.to_user.name,
                     'to_user_img'       : message.to_user.profile_image,
                     'last_message'      : message.content,
+                    'message_id'        : message.id,
                     'is_checked'        : message.is_checked,
                     'last_message_time' : message.created_at,} 
-                    for message in messages]
+                    for message in message_chunk]
             message_all = list({data['to_user_id'] : data for data in datas}.values())
-
-            return JsonResponse({'data' : list(message_all)}, status = 200)
+            
+            for message in message_all:
+                if user == message['to_user_id']:
+                    message['to_user_id']   = message["from_user_id"]
+                    message['to_user_name'] = message['from_user_name']
+                    message['to_user_img']  = message['from_user_img']
+            
+            messages_to_user = list({data['to_user_id'] : data for data in message_all}.values())
+            return JsonResponse({'data' : messages_to_user}, status = 200)
 
         except ValueError:
             return JsonResponse({'message' : 'UNAUTHORIZED_USER'}, status = 403)
+
+class LatestMessageView(View):
+    @login_required
+    def get(self, request):
+        user = request.user.id
+        message_chunk = Message.objects.filter(Q(from_user_id = user)|Q(to_user_id = user))
+        latest_message = message_chunk.order_by('created_at').last() 
+        latest_message_chunk = (
+                 Message.objects.prefetch_related('playlist', 'song')
+                .filter((Q(from_user_id = latest_message.from_user_id)&Q(to_user_id = latest_message.to_user_id))|(Q(from_user_id = latest_message.to_user_id)&Q(to_user_id = latest_message.from_user_id)))
+                .order_by('created_at')
+        )
+        latest_messages_details = [
+                        {
+            'message_id'     : message.id,
+            'content'        : message.content,
+            'from_user_id'   : message.from_user_id,
+            'from_user_name' : message.from_user.name,
+            'from_user_img'  : message.from_user.profile_image,
+            'to_user_id'     : message.to_user_id,
+            'to_user_name'   : message.to_user.name,
+            'to_user_img'    : message.to_user.profile_image,
+            'is_checked'     : message.is_checked,
+            'created_at'     : message.created_at,
+            'playlist'       : [{'playlist_id' : data.id, 'name' : data.name} for data in message.playlist.all()],
+            'song'           : [{'song_id' : data.id, 'name' : data.name} for data in message.song.all()],
+            } for message in latest_message_chunk
+        ]
+
+        return JsonResponse({'latest_message_details' : latest_messages_details}, status = 200)
+
 
 class FollowView(View):
     @login_required

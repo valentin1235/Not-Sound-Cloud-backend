@@ -326,7 +326,6 @@ class NotificationTest(TestCase):
                 
     def test_notification_follower_updated(self):
         client   = Client()
-
         header   = {'HTTP_Authorization' : self.token}
         Follow.objects.create(from_follow_id = self.user3.id, to_follow_id = self.user1.id)
         Message.objects.create(from_user_id = self.user3.id, to_user_id = self.user1.id, content = 'hi')
@@ -377,6 +376,11 @@ class StatusTest(TestCase):
         )
         self.token = jwt.encode({'user_id' : User.objects.get(email = 'aaa@aaa.com').id}, SECRET_KEY, algorithm = ALGORITHM)
 
+    def tearDown(self):
+        User.objects.all().delete()
+        Message.objects.all().delete()
+        Follow.objects.all().delete()
+
     def test_status_follower_updates_mutual_follow(self):
         client = Client()
         Follow.objects.create(
@@ -405,6 +409,11 @@ class UserInfoTest(TestCase):
         )
         self.token = jwt.encode({'user_id' : User.objects.get(email = 'aaa@aaa.com').id}, SECRET_KEY, algorithm = ALGORITHM)
 
+    def tearDown(self):
+        User.objects.all().delete()
+        Message.objects.all().delete()
+        Follow.objects.all().delete()
+
     def test_get_success(self):
         client = Client()
         header   = {'HTTP_Authorization' : self.token}
@@ -422,6 +431,12 @@ class UserSearchTest(TestCase):
         )
         self.token = jwt.encode({'user_id' : User.objects.get(email = 'aaa@aaa.com').id}, SECRET_KEY, algorithm = ALGORITHM)
 
+    def tearDown(self):
+        User.objects.all().delete()
+        Message.objects.all().delete()
+        Follow.objects.all().delete()
+
+
     def test_search_post_success(self):
         client = Client()
         search_value = {
@@ -432,6 +447,44 @@ class UserSearchTest(TestCase):
         header   = {'HTTP_Authorization' : self.token}
         self.assertEqual(response.status_code, 200)
 
+class LatestMessageTest(TestCase):
+    def setUp(self):
+        self.user1 = User.objects.create(email='aaa@aaa.com', password='aaaaaaaa', name='aaa', gender='male', profile_image='aaa')
+        self.user2 = User.objects.create(email='bbb@bbb.com', password='bbbbbbbb', name='bbb', gender='male', profile_image='bbb')
+        self.user3 = User.objects.create(email='ccc@ccc.com', password='cccccccc', name='aaa', gender='male', profile_image='aaa')
+        self.user4 = User.objects.create(email='ddd@ddd.com', password='dddddddd', name='bbb', gender='male', profile_image='bbb')
 
-       
+        Playlist.objects.create(name='good')
+        Song.objects.create(name='hi', user_id=1)
+        self.token   = jwt.encode({'user_id' : User.objects.get(email = 'aaa@aaa.com').id}, SECRET_KEY, algorithm = ALGORITHM)
+        self.message = Message.objects.create(
+                content = 'hi',
+                from_user_id = 1,
+                to_user_id = 2,
+        )
+
+    def tearDown(self):
+        User.objects.all().delete()
+        Message.objects.all().delete()
+        Playlist.objects.all().delete()
+        Song.objects.all().delete()
+
+    def test_message_get_latest_message_success(self):
+        self.message = Message.objects.create(
+                content      = 'hi',
+                from_user_id = self.user2.id,
+                to_user_id   = self.user1.id,
+        )
+ 
+        self.message = Message.objects.create(
+                content      = 'hi',
+                from_user_id = self.user3.id,
+                to_user_id   = self.user1.id,
+        )
+        client   = Client()
+        header   = {"HTTP_Authorization" : self.token}
+        response = client.get('/user/latest-message', **header)
+        self.assertEqual(response.status_code, 200)
+
+        
 
