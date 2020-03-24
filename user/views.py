@@ -295,11 +295,12 @@ class GoogleSignInView(View):
         user_info    = user_request.json()
         google_email = user_info.get('email')
         google_name  = user_info.get('name')
-
+        print(id_token)
         if User.objects.filter(email = google_email).exists():
             user       = User.objects.get(email = google_email)
             token      = jwt.encode({'user_id' : user.id}, SECRET_KEY, algorithm = ALGORITHM)
             return_key = {'user' : {'token' : token.decode('utf-8'), 'uuid' : user.uuid}}
+            print(return_key)
             return JsonResponse(return_key, status = 200)
 
         user = User.objects.create(
@@ -310,6 +311,8 @@ class GoogleSignInView(View):
         token = jwt.encode({'user_id' : user.id}, SECRET_KEY, algorithm = ALGORITHM)
         user_uuid  = user.uuid
         return_key = {'user' : {'token' : token.decode('utf-8'), 'uuid' : user_uuid}}
+        print(return_key)
+
         return JsonResponse(return_key, status = 200)
 
 class NotificationView(View):

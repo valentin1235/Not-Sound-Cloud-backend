@@ -63,25 +63,27 @@ import librosa
 #         count+=1
 #     else:
 #         i+=1
-# def audio_analysis(element):
-#         audio, sampling_rate = librosa.load('media/{}.mp3'.format(element),mono=True)
-#         sum = 0
-#         count = 0 
-#         arr = []
-#         blocks = 270
-#         one_block_data = int(len(audio)/blocks)
-#         w = open('media/{}.txt'.format(element),'w')
-#         for element in audio:
-#             count+=1
-#             sum+=abs(element)    
-#             if(count>=one_block_data):
-#                 data = int(round(((sum)/one_block_data),3)*300)
-#                 arr.append(data)
-#                 count = 0
-#                 sum = 0
-#                 w.write(str(data)+"\n")
-#         w.close()
-#         return sampling_rate
+# audio_analysis(32)
+def audio_analysis(element):
+        audio, sampling_rate = librosa.load('media/{}.mp3'.format(element),mono=True)
+        sum = 0
+        count = 0 
+        arr = []
+        blocks = 270
+        one_block_data = int(len(audio)/blocks)
+        w = open('media/{}.txt'.format(element),'w')
+        for element in audio:
+            count+=1
+            sum+=abs(element)    
+            if(count>=one_block_data):
+                data = int(round(((sum)/one_block_data),3)*300)
+                arr.append(data)
+                count = 0
+                sum = 0
+                w.write(str(data)+"\n")
+        w.close()
+        return sampling_rate
+audio_analysis(32)
 
 
 # for element in range(1,32):    
@@ -91,64 +93,64 @@ import librosa
 
 # for element in range(1,32):
 #     Song.objects.filter(id=element).update(song_url="{}.mp3".format(element))
-arr=[
-    {
-    'name':'EunjiB',
-    'img':'http://bitly.kr/Px8h1M8j'
-    },
-    {    
-    'name':'WaguWagu',
-    'img':'http://bitly.kr/LAXMdP6N'
-    },
-    {
-    'name':'McYou',
-    'img':'http://bitly.kr/14uVjAhU'
-    },
-    {
-    'name':'Piguretto',
-    'img':'http://bitly.kr/0MdZst81'
-    },
-    {
-    'name':'Dev-Hong',
-    'img':'http://bitly.kr/BzQ4R2eVo'
-    },
-    {
-    'name':'1hr',
-    'img':'http://bitly.kr/9XefTbSg'
-    },
-    {
-    'name':'SUNSET',
-    'img':'http://bitly.kr/mGnc4Juo'
-    },
-    {
-    'name':'Ulfrid',
-    'img':'http://bitly.kr/b8IU7EPr'
-    },
-    {
-    'name':'GodRampart',
-    'img':'http://bitly.kr/jwv8JCqf'
-    },
+# arr=[
+#     {
+#     'name':'EunjiB',
+#     'img':'http://bitly.kr/Px8h1M8j'
+#     },
+#     {    
+#     'name':'WaguWagu',
+#     'img':'http://bitly.kr/LAXMdP6N'
+#     },
+#     {
+#     'name':'McYou',
+#     'img':'http://bitly.kr/14uVjAhU'
+#     },
+#     {
+#     'name':'Piguretto',
+#     'img':'http://bitly.kr/0MdZst81'
+#     },
+#     {
+#     'name':'Dev-Hong',
+#     'img':'http://bitly.kr/BzQ4R2eVo'
+#     },
+#     {
+#     'name':'1hr',
+#     'img':'http://bitly.kr/9XefTbSg'
+#     },
+#     {
+#     'name':'SUNSET',
+#     'img':'http://bitly.kr/mGnc4Juo'
+#     },
+#     {
+#     'name':'Ulfrid',
+#     'img':'http://bitly.kr/b8IU7EPr'
+#     },
+#     {
+#     'name':'GodRampart',
+#     'img':'http://bitly.kr/jwv8JCqf'
+#     },
 
-    {
-    'name':'HandKing',
-    'img':'http://bitly.kr/vd7SyAO5'
-    },
+#     {
+#     'name':'HandKing',
+#     'img':'http://bitly.kr/vd7SyAO5'
+#     },
 
-    {
-    'name':'JoonsiK',
-    'img':'http://bitly.kr/X8EceLpS'
-    },
-    {
-    'name':'LightofBackend',
-    'img':'http://bitly.kr/fQjkf34Q'
-    },
-    {
-    'name':'DavDat',
-    'img':'http://bitly.kr/BUVknI8z'
-    }
-]
+#     {
+#     'name':'JoonsiK',
+#     'img':'http://bitly.kr/X8EceLpS'
+#     },
+#     {
+#     'name':'LightofBackend',
+#     'img':'http://bitly.kr/fQjkf34Q'
+#     },
+#     {
+#     'name':'DavDat',
+#     'img':'http://bitly.kr/BUVknI8z'
+#     }
+# ]
 
-count=1
-for element in arr:
-    User.objects.filter(id=count).update(name=element['name'],profile_image=element['img'])
-    count+=1
+# count=1
+# for element in arr:
+#     User.objects.filter(id=count).update(name=element['name'],profile_image=element['img'])
+#     count+=1
