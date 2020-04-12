@@ -10,7 +10,7 @@ Opensource music streaming site [SoundCloud](https://soundcloud.com/) clone.
 Click below image to see our demo.
 
 
-[![SoundCloud demo](https://i.ibb.co/DbfDptM/Screen-Shot-2020-03-17-at-8-46-32-PM.png=200x)](https://www.youtube.com/watch?v=u6SGpbk2x5A&feature=youtu.be)
+[![SoundCloud demo](https://images.velog.io/images/valentin123/post/3c2d9978-8f14-4773-8ee3-6d634c295120/%EC%95%B1.png)](https://www.youtube.com/watch?v=u6SGpbk2x5A&feature=youtu.be)
 
 # Features
 + Signup and signin features.
