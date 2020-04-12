@@ -13,9 +13,13 @@ Click below image to see our demo.
 [![SoundCloud demo](https://images.velog.io/images/valentin123/post/3c2d9978-8f14-4773-8ee3-6d634c295120/%EC%95%B1.png)](https://www.youtube.com/watch?v=u6SGpbk2x5A&feature=youtu.be)
 
 # Features
-+ Signup and signin features.
-+ Show similar products of a chosen product.
-+ Add, change, and delete items in a user's wishlist and cart.
++ Self-made sign-up and sign-in features.
++ Google sign-up and sign-in features.
++ Send and reciption of message.
++ Follow and unfollow feature.
++ Notification for message and follow.
++ Comment on song giving timely position.
++ User recommendation to follow.
 
 
 # Technologies
@@ -23,14 +27,13 @@ Click below image to see our demo.
 + Web Framework : Django 3.0
 + Database      : AWS RDS with MySQL
 + HTTP headers  : Cross-Origin Resource Sharing (CORS) headers
++ Google Signup : OAuth 2.0
 + Encryption    : bcrypt
 + Web Token     : JWT
 + Web Scraping  : BeautifulSoup 4.0, Pandas
 
 # API Documentation
-+ [signup, signin, order](https://documenter.getpostman.com/view/10398571/SzS4T8ME)
-+ [products](https://documenter.getpostman.com/view/10644576/SzS8rjuD?version=latest#09377cd1-b1c6-47cc-930d-0c6e2d84c1ba)
-
++ [message, follow, notification](https://documenter.getpostman.com/view/10644576/SzS8rjpk?version=latest#db667abf-875b-4a91-8c64-466ad7f301f2)
 
 # Database Modeling
-![Foodly ERD](https://i.ibb.co/rFFmfMf/foodly-20200317-21-43.png)
+![Foodly ERD](https://media.vlpt.us/images/valentin123/post/ca1b2e01-6bcb-4e91-8720-63eafe514c6c/NotSoundCloud_20200412_23_27.png)
