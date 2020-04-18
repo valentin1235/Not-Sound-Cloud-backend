@@ -36,4 +36,4 @@ Click below image to see our demo.
 + [message, follow, notification](https://documenter.getpostman.com/view/10644576/SzS8rjpk?version=latest#db667abf-875b-4a91-8c64-466ad7f301f2)
 
 # Database Modeling
-![Foodly ERD](https://media.vlpt.us/images/valentin123/post/ca1b2e01-6bcb-4e91-8720-63eafe514c6c/NotSoundCloud_20200412_23_27.png)
+![SoundCloud ERD](https://media.vlpt.us/images/valentin123/post/ca1b2e01-6bcb-4e91-8720-63eafe514c6c/NotSoundCloud_20200412_23_27.png)
