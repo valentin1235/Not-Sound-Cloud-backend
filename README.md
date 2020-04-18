@@ -13,13 +13,13 @@ Click below image to see our demo.
 [![SoundCloud demo](https://images.velog.io/images/valentin123/post/3c2d9978-8f14-4773-8ee3-6d634c295120/%EC%95%B1.png)](https://www.youtube.com/watch?v=u6SGpbk2x5A&feature=youtu.be)
 
 # Features
-+ Self-made sign-up and sign-in features.
-+ Google sign-up and sign-in features.
-+ Send and reciption of message.
-+ Follow and unfollow feature.
-+ Notification for message and follow.
-+ Comment on song giving timely position.
-+ User recommendation to follow.
++ Self-made sign-up and sign-in features(Heechul Yoon).
++ Google sign-up and sign-in features(Heechul Yoon).
++ Send and reciption of message(Heechul Yoon).
++ Follow and unfollow feature(Heechul Yoon).
++ Notification for message and follow(Heechul Yoon).
++ Comment on song giving timely position(Heechul Yoon).
++ User recommendation to follow(Heechul Yoon).
 
 
 # Technologies
