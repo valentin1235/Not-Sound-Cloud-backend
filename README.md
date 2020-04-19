@@ -21,7 +21,7 @@ Click below image to see our demo.
 + Comment on song giving timely position(Heechul Yoon).
 + User recommendation to follow(Heechul Yoon).
 + MainPage page, Audio list API(Minkyu Kim).
-+ Audio detail (Minkyu Kim).
++ Audio details (Minkyu Kim).
 + Auido Analizations and upload Audio file(Minkyu Kim).
 + Progressive download audio streaming (Minkyu Kim).
 
