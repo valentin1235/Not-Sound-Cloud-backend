@@ -20,17 +20,21 @@ Click below image to see our demo.
 + Notification for message and follow(Heechul Yoon).
 + Comment on song giving timely position(Heechul Yoon).
 + User recommendation to follow(Heechul Yoon).
-
++ MainPage page, Audio list API(Minkyu Kim).
++ Audio detail (Minkyu Kim).
++ Auido Analizations and upload Audio file(Minkyu Kim).
++ Progressive download audio streaming (Minkyu Kim).
 
 # Technologies
-+ Language      : Python
-+ Web Framework : Django 3.0
-+ Database      : AWS RDS with MySQL
-+ HTTP headers  : Cross-Origin Resource Sharing (CORS) headers
-+ Google Signup : OAuth 2.0
-+ Encryption    : bcrypt
-+ Web Token     : JWT
-+ Web Scraping  : BeautifulSoup 4.0, Pandas
++ Language       : Python
++ Web Framework  : Django 3.0
++ Database       : AWS RDS with MySQL
++ HTTP headers   : Cross-Origin Resource Sharing (CORS) headers
++ Google Signup  : OAuth 2.0
++ Encryption     : bcrypt
++ Web Token      : JWT
++ Web Scraping   : BeautifulSoup 4.0, Pandas
++ Audio Analysis : LiBrosa, Scipy
 
 # API Documentation
 + [message, follow, notification](https://documenter.getpostman.com/view/10644576/SzS8rjpk?version=latest#db667abf-875b-4a91-8c64-466ad7f301f2)
