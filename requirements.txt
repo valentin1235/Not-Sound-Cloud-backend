@@ -34,7 +34,7 @@ Flask-S3==0.3.3
 Flask-Script==2.0.6
 Flask-SQLAlchemy==2.4.1
 gunicorn==20.0.4
-httpie==0.9.8
+httpie==1.0.3
 httplib2==0.9.2
 idna==2.9
 importlib-metadata==1.5.0
