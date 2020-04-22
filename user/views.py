@@ -13,7 +13,7 @@ from django.core.validators import ValidationError
 from .utils                    import login_required
 from .models                   import User, Message, Follow, MessagePlaylist, MessageSong
 from song.models               import Song, Playlist 
-from my_settings import SECRET_KEY, ALGORITHM          
+from notsoundcloud.my_settings import SECRET_KEY, ALGORITHM          
 
 class WebSignUpView(View):
     def post(self, request):

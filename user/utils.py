@@ -1,8 +1,8 @@
 import json, jwt
 
 from .models import User
-from my_settings import SECRET_KEY, ALGORITHM
-from jwt.exceptions            import InvalidSignatureError
+from notsoundcloud.my_settings import SECRET_KEY, ALGORITHM
+# from jwt.exceptions            import InvalidTokenError
 
 from django.http import JsonResponse, HttpResponse
 

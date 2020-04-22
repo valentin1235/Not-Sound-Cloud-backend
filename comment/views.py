@@ -7,7 +7,7 @@ from user.utils                import login_required
 from .models                   import Comment
 from user.models               import User, Message, Follow, MessagePlaylist, MessageSong
 from song.models               import Song, Playlist
-from my_settings             import SECRET_KEY, ALGORITHM
+from notsoundcloud.my_settings             import SECRET_KEY, ALGORITHM
 
 class CommentView(View):
     @login_required
