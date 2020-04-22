@@ -1,6 +1,6 @@
 import jwt, bcrypt, json, uuid, requests
 
-from django.db              import IntegrityError
+from django.db              import IntegrityError, transaction, connection
 from django.db.models       import Count, Q
 from django.views           import View
 from django.http            import HttpResponse, JsonResponse
@@ -11,9 +11,9 @@ from django.core.validators import validate_email
 from django.core.validators import ValidationError
 
 from .utils                    import login_required
-from .models                   import User, Message, Follow, MessagePlaylist, MessageSong
+from .models                   import User, Message, MessageNumber, Follow, MessagePlaylist, MessageSong
 from song.models               import Song, Playlist 
-from my_settings import SECRET_KEY, ALGORITHM          
+from notsoundcloud.my_settings import SECRET_KEY, ALGORITHM          
 
 class WebSignUpView(View):
     def post(self, request):
@@ -27,7 +27,7 @@ class WebSignUpView(View):
 
         try:
             validate_email(data['email'])
-            User.objects.create(
+            user = User.objects.create(
                     email         = data['email'],
                     password      = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt()).decode('utf-8'),
                     age           = data['age'],
@@ -35,15 +35,15 @@ class WebSignUpView(View):
                     gender        = data['gender'],
                     uuid          = str(uuid.uuid3(uuid.NAMESPACE_DNS, data['email']).hex)
             )
-            token = jwt.encode({'user_id' : User.objects.get(email = data['email']).id}, SECRET_KEY, algorithm = ALGORITHM)
+            token = jwt.encode({'user_id' : user.id}, SECRET_KEY, algorithm = ALGORITHM).decode()
 
-            return JsonResponse({'token' : token.decode()}, status = 200)
+            return JsonResponse({'token' : token}, status = 200)
 
         except KeyError:            
             return JsonResponse({'message' : 'INVALID_KEY'}, status = 400)
 
-        except IntegrityError:    
-            return JsonResponse({'message' : 'USER_EXISTS'}, status = 400)
+        except IntegrityError as e:    
+            return JsonResponse({'message' : f'{e}'}, status = 400)
 
         except ValidationError:
             return JsonResponse({'message' : 'INVALID_EMAIL'}, status = 400)
@@ -118,15 +118,51 @@ class UserSearchView(View):
 class MessageView(View):
     @login_required
     def post(self, request):
-        data     = json.loads(request.body)
+        data         = json.loads(request.body)
+        content      = data.get('content', None)
+        user = request.user
+        if not content:
+            return JsonResponse({'message' : 'CONTENT_MISSING'}, status = 400)
+
+        to_user_id = data.get('to_user_id', None)
+        if not to_user_id:
+            return JsonResponse({'message' : 'TO_USER_ID_MISSING'}, status = 400)
+              
+        message_number_id = data.get('message_number_id', None) 
+        if Message.objects.filter((Q(to_user_id = to_user_id)&Q(from_user_id = user.id)&Q(message_number_id = message_number_id))|(Q(to_user_id = user.id)&Q(from_user_id = to_user_id)&Q(message_number_id = message_number_id))).exists():
+
+            if not message_number_id:
+                return JsonResponse({'message' : 'MESSAGE_NUMBER_ID_NEEDED'}, status = 400)
+            
+            message = Message.objects.create(
+                message_number_id = message_number_id,
+                content        = content,
+                from_user_id   = request.user.id,
+                to_user_id     = to_user_id,
+            )
+            return JsonResponse({'message' : 'SUCCESS'}, status = 200)
+        
+        elif not message_number_id:
+            if Message.objects.filter(Q(to_user_id = to_user_id)&Q(from_user_id = user.id)|Q(to_user_id = user.id)&Q(from_user_id = to_user_id)).exists():
+                return JsonResponse({'message' : 'UNABLE_TO_CREATE_MESSAGE_NUMBER'}, status = 400)
+
+            message_number = MessageNumber.objects.create()
+            try:
+                message = Message.objects.create(
+                    message_number_id = message_number.id,
+                    content        = content,
+                    from_user_id   = request.user.id,
+                    to_user_id     = to_user_id,
+                )
+                return JsonResponse({'message' : 'SUCCESS'}, status = 400)
+            except IntegrityError:
+                return JsonResponse({'message' : 'TO_USER_NOT_EXISTS'}, status = 400)        
+         
+        else:
+            return JsonResponse({'message' : 'MESSAGE_NUMBER_NOT_MATCH_TO_USER'}, status = 400)
+        
         playlist = data.get('playlist_id', None)
         song     = data.get('song_id', None)
-        message  = Message.objects.create(
-                content      = data['content'],
-                from_user_id = request.user.id,
-                to_user_id   = data['to_user_id'],
-        )
-    
         if playlist:
             MessagePlaylist.objects.create(
                 message_id  = message.id,
@@ -139,64 +175,88 @@ class MessageView(View):
                 song_id    = song,
             )
 
-        return HttpResponse(status = 200)
+        return JsonResponse({'message' : 'SUCCESS'}, status = 200)
 
     @login_required
     def get(self, request):
         try:
             user    = request.user.id
-            to_user = request.GET.get('to_user', None)
-            
-            if to_user:
-                message_details = (
-                        Message.objects.prefetch_related('playlist', 'song')
-                        .filter((Q(from_user_id=user)&Q(to_user_id=to_user))|(Q(from_user_id=to_user)&Q(to_user_id=user)))
-                        .order_by('created_at')
-                )
-                messages = [
-                        {
-                    'message_id'     : message.id, 
-                    'content'        : message.content, 
-                    'from_user_id'   : message.from_user_id, 
-                    'from_user_name' : message.from_user.name,
-                    'from_user_img'  : message.from_user.profile_image,
-                    'to_user_id'     : message.to_user_id,
-                    'to_user_name'   : message.to_user.name,
-                    'to_user_img'    : message.to_user.profile_image,
-                    'is_checked'     : message.is_checked,
-                    'created_at'     : message.created_at, 
-                    'playlist'       : [{'playlist_id' : data.id, 'name' : data.name} for data in message.playlist.all()],
-                    'song'           : [{'song_id' : data.id, 'name' : data.name} for data in message.song.all()],
-                    }
-                    for message in message_details
-                ]
-                Message.objects.filter(to_user_id = user).update(is_checked = True)
+            message_number_id = request.GET.get('chatroom_id', None)
+            with connection.cursor() as db_cursor:
 
-                return JsonResponse({'message_details' : messages}, status = 200)
+                if message_number_id:
+                    db_cursor.execute('''
+                        select 
+                        message_numbers.id as chatromm_id,
+                        messages.id as message_id,
+                        messages.content as content,
+                        messages.created_at as created_at,
+                        from_users.name as from_user_name,
+                        from_users.profile_image as from_user_profile_image,
+                        from_users.id as from_user_id,
+                        to_users.name as to_user_name,
+                        to_users.profile_image as to_user_profile_image,
+                        to_users.id as to_user_id
+                        from message_numbers
+                        left join messages on messages.message_number_id = message_numbers.id 
+                        left join users as from_users on messages.from_user_id = from_users.id 
+                        left join users as to_users on messages.to_user_id = to_users.id 
+                        where (from_user_id = %(user)s or to_user_id = %(user)s) and message_numbers.id = %(message_number_id)s
+                        order by messages.created_at DESC
+                    ''', {'message_number_id' : message_number_id, 'user' : user})
+                    messages = db_cursor.fetchall()
+                    messages = [{
+                        'chatroom_id' : m[0], 
+                        'message_id' : m[1],
+                        'content' : m[2],
+                        'created_at' : m[3],
+                        'from_user_name' : m[4],
+                        'from_user_profile_image' : m[5],
+                        'from_user_id' : m[6],
+                        'to_user_name' : m[7],
+                        'to_user_profile_image' : m[8],
+                        'to_user_id' : m[9],
+                        'playlist_id' : Message.objects.valeus
+                    } for m in messages]
+                
+                    return JsonResponse({'message_details' : messages}, status = 200)
             
-            message_chunk = Message.objects.filter(Q(from_user_id = user)|Q(to_user_id = user)).order_by('created_at')
-            datas = [{
-                    'from_user_id'      : message.from_user_id, 
-                    'from_user_name'    : message.from_user.name, 
-                    'from_user_img'     : message.from_user.profile_image,
-                    'to_user_id'        : message.to_user_id, 
-                    'to_user_name'      : message.to_user.name,
-                    'to_user_img'       : message.to_user.profile_image,
-                    'last_message'      : message.content,
-                    'message_id'        : message.id,
-                    'is_checked'        : message.is_checked,
-                    'last_message_time' : message.created_at,} 
-                    for message in message_chunk]
-            message_all = list({data['to_user_id'] : data for data in datas}.values())
-            
-            for message in message_all:
-                if user == message['to_user_id']:
-                    message['to_user_id']   = message["from_user_id"]
-                    message['to_user_name'] = message['from_user_name']
-                    message['to_user_img']  = message['from_user_img']
-            
-            messages_to_user = list({data['to_user_id'] : data for data in message_all}.values())
-            return JsonResponse({'data' : messages_to_user}, status = 200)
+
+                db_cursor.execute('''
+                    select 
+                    message_numbers.id as message_number,
+                    (select content from messages where message_number_id = message_numbers.id order by created_at DESC LIMIT 1) as last_message_content,
+                    (select created_at from messages where message_number_id = message_numbers.id order by created_at DESC LIMIT 1) as last_message_created_at,
+                    (select id from messages where message_number_id = message_numbers.id order by created_at DESC LIMIT 1) as last_message_id,
+                    (select is_checked from messages where message_number_id = message_numbers.id order by created_at DESC LIMIT 1) as last_message_is_checked,
+                    (select from_user_id from messages where message_number_id = message_numbers.id order by created_at DESC LIMIT 1) as from_user_id,
+                    (select to_user_id from messages where message_number_id = message_numbers.id order by created_at DESC LIMIT 1) as to_user_id,
+                    (select users.name from messages left join users on messages.from_user_id = users.id where message_number_id = message_numbers.id order by messages.created_at DESC LIMIT 1) as from_user_name,
+                    (select users.name from messages left join users on messages.to_user_id = users.id where message_number_id = message_numbers.id order by messages.created_at DESC LIMIT 1) as to_user_name,
+                    (select users.profile_image from messages left join users on messages.to_user_id = users.id where message_number_id = message_numbers.id order by messages.created_at DESC LIMIT 1) as to_user_profile_image,
+                    (select users.profile_image from messages left join users on messages.to_user_id = users.id where message_number_id = message_numbers.id order by messages.created_at DESC LIMIT 1) as from_user_profile_image
+                    from message_numbers
+                    left join messages on messages.message_number_id = message_numbers.id 
+                    where messages.to_user_id = %(user_id)s
+                    or messages.from_user_id = %(user_id)s
+                    group by message_numbers.id 
+                ''', {'user_id' : user})
+                
+                message_number_list = db_cursor.fetchall()
+                message_number_list = [{
+                    'chatroom_id': m[0], 
+                    'content': m[1], 
+                    'created_at': m[2], 
+                    'message_id': m[3],
+                    'is_checked' : m[4],
+                    'from_user_id' : m[5],
+                    'to_user_id' : m[6],
+                    'from_user_name' : m[7],
+                    'to_user_name' : m[8],
+                    'to_user_profile_image' : m[9],
+                    'from_user_profile_image' : m[10]
+                } for m in message_number_list]
+            return JsonResponse({'data' : message_number_list}, status = 200)
 
         except ValueError:
             return JsonResponse({'message' : 'UNAUTHORIZED_USER'}, status = 403)
