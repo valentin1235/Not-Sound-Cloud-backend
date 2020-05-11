@@ -1,4 +1,4 @@
-# Introduction
+## Introduction
 
 Opensource music streaming site [SoundCloud](https://soundcloud.com/) clone. 
 #### Topic
@@ -15,7 +15,7 @@ Opensource music streaming site [SoundCloud](https://soundcloud.com/) clone.
 - 주단위 백로그작성
 - 일단위 스탠드업미팅
          
-# 담당 개발 내역
+## 담당 개발 내역
 [Django 프로젝트 초기 설계]
 - my_settings.py : database 정보, secret key, jwt 알고리즘 정보 관리
 - requirements.txt : 개발 환경 공유
@@ -65,12 +65,12 @@ Opensource music streaming site [SoundCloud](https://soundcloud.com/) clone.
 - 재생이 되고있는 위치에 댓글리 달림
 - 저장할 때 재생 위치를 저장하고 표출할 때 재생 댓글과 재생위치를 표출
 
-# Demo
+## Demo
 Click below image to see our demo.
 
 [![SoundCloud demo](https://images.velog.io/images/valentin123/post/3c2d9978-8f14-4773-8ee3-6d634c295120/%EC%95%B1.png)](https://www.youtube.com/watch?v=u6SGpbk2x5A&feature=youtu.be)
 
-# Features
+## Features
 + Self-made sign-up and sign-in features(Heechul Yoon).
 + Google sign-up and sign-in features(Heechul Yoon).
 + Send and reciption of message(Heechul Yoon).
@@ -83,7 +83,7 @@ Click below image to see our demo.
 + Auido Analizations and upload Audio file(Minkyu Kim).
 + Progressive download audio streaming (Minkyu Kim).
 
-# Technologies
+## Technologies
 + Python 3.8.0
 + Django 3.0.4
 + MySQL
@@ -94,8 +94,8 @@ Click below image to see our demo.
 + AWS RDS
 + AWS S3
 
-# API Documentation
+## API Documentation
 + [message, follow, notification](https://documenter.getpostman.com/view/10644576/SzS8rjpk?version=latest#db667abf-875b-4a91-8c64-466ad7f301f2)
 + [main page, stream list page, play audio view, streaming data](https://documenter.getpostman.com/view/10398707/SzfDvQ7Q?version=latest#ed51a1eb-edd3-4db4-8260-21b18355b0a1)
-# Database Modeling
+## Database Modeling
 ![SoundCloud ERD](https://media.vlpt.us/images/valentin123/post/ca1b2e01-6bcb-4e91-8720-63eafe514c6c/NotSoundCloud_20200412_23_27.png)
