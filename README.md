@@ -1,10 +1,19 @@
 # Introduction
 
 Opensource music streaming site [SoundCloud](https://soundcloud.com/) clone. 
+#### Topic
+- 음원 스트리밍 사이트 클론 프로젝트
 
-+ Project Period  : 2 weeks
+#### Team 
+- 프론트앤드 2명, 백앤드 3명, 리엑트 네이티브 1명
 
-+ Members         : (back) Minkyu Kim, Heechul Yoon, (front) Eunji Hwang, Eunji Hwang, Jongtaek Oh
+#### Project Period 
+- 2020.03.09 - 2020.03.20
+
+#### Coworking 
+- Trello를 스크럼방식 협업
+- 주단위 백로그작성
+- 일단위 스탠드업미팅
          
 # 담당 개발 내역
 [Django 프로젝트 초기 설계]
@@ -75,15 +84,15 @@ Click below image to see our demo.
 + Progressive download audio streaming (Minkyu Kim).
 
 # Technologies
-+ Language       : Python
-+ Web Framework  : Django 3.0
-+ Database       : AWS RDS with MySQL
-+ HTTP headers   : Cross-Origin Resource Sharing (CORS) headers
-+ Google Signup  : OAuth 2.0
-+ Encryption     : bcrypt
-+ Web Token      : JWT
-+ Web Scraping   : BeautifulSoup 4.0, Pandas
-+ Audio Analysis : LiBrosa, Scipy
++ Python 3.8.0
++ Django 3.0.4
++ MySQL
++ Git : rebase 커밋관리
++ Django Unit Test
++ Bcrypt : 패스워드 암호화
++ JWT : 토큰 발행
++ AWS RDS
++ AWS S3
 
 # API Documentation
 + [message, follow, notification](https://documenter.getpostman.com/view/10644576/SzS8rjpk?version=latest#db667abf-875b-4a91-8c64-466ad7f301f2)
