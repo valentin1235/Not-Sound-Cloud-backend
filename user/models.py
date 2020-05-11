@@ -28,17 +28,24 @@ class Grade(models.Model):
         db_table = 'grades'
 
 class Message(models.Model):
-    content    = models.TextField(null = True)
-    from_user  = models.ForeignKey('User', on_delete = models.SET_NULL, null = True, related_name = 'from_user')
-    to_user    = models.ForeignKey('User', on_delete = models.SET_NULL, null = True, related_name = 'to_user')
-    created_at = models.DateTimeField(auto_now_add = True)
-    updated_at = models.DateTimeField(auto_now = True)
-    playlist   = models.ManyToManyField('song.Playlist', through = 'MessagePlaylist')
-    song       = models.ManyToManyField('song.Song', through = 'MessageSong')
-    is_checked = models.BooleanField(default = False)
+    message_number = models.ForeignKey('MessageNumber', on_delete = models.CASCADE, null = True)
+    content         = models.TextField(null = True)
+    from_user       = models.ForeignKey('User', on_delete = models.SET_NULL, null = True, related_name = 'from_user')
+    to_user         = models.ForeignKey('User', on_delete = models.SET_NULL, null = True, related_name = 'to_user')
+    created_at      = models.DateTimeField(auto_now_add = True)
+    updated_at      = models.DateTimeField(auto_now = True)
+    playlist        = models.ManyToManyField('song.Playlist', through = 'MessagePlaylist')
+    song            = models.ManyToManyField('song.Song', through = 'MessageSong')
+    is_checked      = models.BooleanField(default = False)
 
     class Meta:
         db_table = 'messages'
+
+class MessageNumber(models.Model):
+    created_at = models.DateTimeField(auto_now_add = True)
+    
+    class Meta:
+        db_table = 'message_numbers'
 
 class MessagePlaylist(models.Model):
     message  = models.ForeignKey('Message', on_delete = models.CASCADE, null = True)
