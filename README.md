@@ -5,7 +5,7 @@ Opensource music streaming site [SoundCloud](https://soundcloud.com/) clone.
 - 음원 스트리밍 사이트 클론 프로젝트
 
 #### Team 
-- 프론트앤드 2명, 백앤드 3명, 리엑트 네이티브 1명
+- 프론트앤드 2명(오종택, 황은지A), 백앤드 2명(윤희철, 김민규), 리엑트 네이티브 1명(황은지B)
 
 #### Project Period 
 - 2020.03.09 - 2020.03.20
@@ -70,7 +70,7 @@ Click below image to see our demo.
 
 [![SoundCloud demo](https://images.velog.io/images/valentin123/post/3c2d9978-8f14-4773-8ee3-6d634c295120/%EC%95%B1.png)](https://www.youtube.com/watch?v=u6SGpbk2x5A&feature=youtu.be)
 
-## Features
+## APIs
 + Self-made sign-up and sign-in features(Heechul Yoon).
 + Google sign-up and sign-in features(Heechul Yoon).
 + Send and reciption of message(Heechul Yoon).
